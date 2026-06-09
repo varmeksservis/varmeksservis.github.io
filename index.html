@@ -60,6 +60,8 @@
   .back.show{display:grid}
   .langbtn{margin-left:auto;background:var(--surface);border:1px solid var(--line);color:var(--red-soft);min-width:46px;height:38px;border-radius:10px;font-family:'JetBrains Mono';font-weight:700;font-size:13px;letter-spacing:.5px;cursor:pointer;transition:border-color .2s,background .2s;display:grid;place-items:center}
   .langbtn:hover{border-color:var(--red);background:var(--surface-2)}
+  .verbadge{margin-top:22px;text-align:center;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--txt-dim);letter-spacing:.3px;cursor:pointer;user-select:none;opacity:.7;transition:opacity .2s}
+  .verbadge:active{opacity:1}
   .back{margin-left:8px}
 
   .pad{padding:20px 18px}
@@ -353,6 +355,7 @@
           <span class="soon" data-i18n="soon">YAKINDA</span>
         </div>
       </div>
+      <div class="verbadge" id="verBadge" onclick="checkForUpdate()"></div>
     </div>
   </div>
 
@@ -414,6 +417,16 @@
 
 <script>
 /* ============================================================
+   SÜRÜM — TEK KAYNAK
+   Her yayında bu iki değeri güncelleyin. APP_VERSION hem ekranda
+   görünür hem de service worker önbellek adına gömülür; böylece
+   sürüm değişince eski önbellek otomatik silinir ve güncelleme
+   bildirimi tetiklenir.
+   ============================================================ */
+const APP_VERSION = "1.3.0";
+const APP_DATE = "2026-06";
+
+/* ============================================================
    ÇOK DİLLİLİK (i18n) — TR / EN
    LANG: aktif dil. Açılışta TR.
    t(key): aktif dile göre arayüz metni döndürür.
@@ -425,6 +438,7 @@ let LANG = "tr";
 const I18N = {
   ts_line:        { tr:"Saha<br>Rehberi",            en:"Field<br>Guide" },
   langBtn:        { tr:"EN",                          en:"TR" },
+  ver_label:      { tr:"Sürüm",                        en:"Version" },
 
   /* HOME */
   home_greet:     { tr:"Teknik Servis",              en:"Technical Service" },
@@ -802,6 +816,9 @@ function applyStaticI18n(){
   document.querySelectorAll('[data-i18n-ph]').forEach(el=>{
     el.setAttribute('placeholder', t(el.getAttribute('data-i18n-ph')));
   });
+  // sürüm rozeti (dile göre etiket)
+  const vb = document.getElementById('verBadge');
+  if(vb){ vb.textContent = t('ver_label') + ' ' + APP_VERSION + ' · ' + APP_DATE; }
   document.documentElement.lang = LANG;
 }
 function toggleLang(){ setLang(LANG==="tr" ? "en" : "tr"); }
@@ -1275,11 +1292,13 @@ showView("home");
 <script>
 /* PWA: çevrimdışı çalışma + OTOMATİK GÜNCELLEME
    Mantık: internet varsa her zaman en yeni sürümü ağdan getir (network-first),
-   internet yoksa önbellekten çalış. Böylece güncellemeler anında gelir,
-   çevrimdışı kullanım da korunur. */
+   internet yoksa önbellekten çalış. Önbellek adı APP_VERSION ile damgalanır;
+   sürüm değişince eski önbellek silinir ve güncelleme bildirimi tetiklenir. */
 if ('serviceWorker' in navigator) {
+  // APP_VERSION'ı SW koduna göm → her sürümde cache adı değişir, eskisi temizlenir
   const swCode = `
-    const CACHE = 'varmeks-v2';
+    const VERSION = '${APP_VERSION}';
+    const CACHE = 'varmeks-' + VERSION;
     self.addEventListener('install', e => { self.skipWaiting(); });
     self.addEventListener('activate', e => {
       e.waitUntil(
@@ -1290,6 +1309,7 @@ if ('serviceWorker' in navigator) {
     });
     self.addEventListener('fetch', e => {
       if (e.request.method !== 'GET') return;
+      const isNav = e.request.mode === 'navigate';
       e.respondWith(
         fetch(e.request).then(res => {
           // ağdan geldi → önbelleği güncelle, en yeni sürümü göster
@@ -1297,14 +1317,17 @@ if ('serviceWorker' in navigator) {
           caches.open(CACHE).then(c => { try { c.put(e.request, copy); } catch(_){} });
           return res;
         }).catch(() =>
-          // internet yok → önbellekten ver (çevrimdışı çalışma)
-          caches.open(CACHE).then(c => c.match(e.request))
+          // internet yok → önbellekten ver; sayfa isteğinde köke düş
+          caches.open(CACHE).then(c =>
+            c.match(e.request).then(m => m || (isNav ? c.match('./') || c.match('index.html') : undefined))
+          )
         )
       );
     });
   `;
   const blob = new Blob([swCode], { type: 'application/javascript' });
   const url = URL.createObjectURL(blob);
+  // kayıt URL'sine sürümü ekle → SW dosyası her sürümde "değişmiş" sayılır
   navigator.serviceWorker.register(url).then(reg => {
     // yeni sürüm bulununca kullanıcıya nazik bildirim
     reg.addEventListener('updatefound', () => {
@@ -1322,6 +1345,17 @@ if ('serviceWorker' in navigator) {
   setInterval(() => {
     navigator.serviceWorker.getRegistration().then(r => r && r.update()).catch(()=>{});
   }, 60000);
+}
+
+/* Rozete tıklayınca manuel güncelleme kontrolü */
+function checkForUpdate(){
+  if (!('serviceWorker' in navigator)) { location.reload(); return; }
+  navigator.serviceWorker.getRegistration().then(r => {
+    if (r) r.update();
+    // kısa bir bilgi: kontrol ediliyor
+    const vb = document.getElementById('verBadge');
+    if (vb){ const o = vb.textContent; vb.textContent = (LANG==="en"?"Checking for updates…":"Güncelleme kontrol ediliyor…"); setTimeout(()=>{ vb.textContent = o; }, 2500); }
+  }).catch(()=>location.reload());
 }
 
 function showUpdateToast(){
