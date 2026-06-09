@@ -305,6 +305,40 @@
   .distinguish .dtx{font-size:13px;line-height:1.6;color:#5a4a2a}
   .restart:hover{border-color:var(--red);color:var(--red-soft)}
   .call{width:100%;margin-top:11px;padding:15px;border-radius:12px;border:none;background:linear-gradient(135deg,var(--red),#ff5a2a);color:#fff;font-family:inherit;font-weight:800;font-size:15px;letter-spacing:.4px;cursor:pointer;box-shadow:0 6px 20px rgba(223,32,39,.3)}
+
+  /* ---- RAPOR FORMU ---- */
+  .repform{margin-top:14px;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+  .repform .rf-tt{font-weight:800;font-size:15px;color:var(--txt);margin-bottom:4px}
+  .repform .rf-sub{font-size:12.5px;color:var(--txt-dim);line-height:1.5;margin-bottom:14px}
+  .rf-field{margin-bottom:13px}
+  .rf-field label{display:block;font-size:12.5px;font-weight:700;color:var(--txt-dim);margin-bottom:6px;letter-spacing:.2px}
+  .rf-field input,.rf-field textarea{width:100%;box-sizing:border-box;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 13px;font-family:inherit;font-size:14px;color:var(--txt);transition:border-color .2s}
+  .rf-field input:focus,.rf-field textarea:focus{outline:none;border-color:var(--blue)}
+  .rf-field textarea{resize:vertical;min-height:62px;line-height:1.5}
+  .rf-photo{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .rf-photo-btn{display:inline-flex;align-items:center;gap:8px;background:var(--surface-2);border:1px dashed var(--line);border-radius:10px;padding:11px 15px;font-family:inherit;font-weight:700;font-size:13.5px;color:var(--txt-dim);cursor:pointer}
+  .rf-photo-btn:active{border-color:var(--blue);color:var(--blue)}
+  .rf-photo-count{font-size:12.5px;color:var(--green);font-weight:700}
+  .rf-thumbs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .rf-thumb{position:relative;width:60px;height:60px;border-radius:9px;overflow:hidden;border:1px solid var(--line)}
+  .rf-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+  .rf-thumb .rm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,.65);color:#fff;border:none;font-size:12px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+  .rf-hint{font-size:11.5px;color:var(--txt-dim);line-height:1.5;margin-top:7px;font-style:italic}
+  .skip-btn{width:100%;margin-top:10px;padding:12px;border-radius:11px;border:1px solid var(--line);background:transparent;color:var(--txt-dim);font-family:inherit;font-weight:600;font-size:13px;cursor:pointer}
+
+  /* ---- GEÇMİŞ ---- */
+  .histitem{display:flex;align-items:center;gap:13px;width:100%;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:14px;margin-bottom:10px;cursor:pointer;transition:border-color .2s}
+  .histitem:active{border-color:var(--blue)}
+  .histitem .hcode{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:15px;color:var(--txt);min-width:48px}
+  .histitem .hmeta{flex:1;min-width:0}
+  .histitem .hnm{font-weight:700;font-size:13.5px;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .histitem .hsub{font-size:11.5px;color:var(--txt-dim);margin-top:3px}
+  .histitem .hbadge{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;border-radius:99px;padding:5px 10px;white-space:nowrap}
+  .hbadge.ok{color:var(--green);background:rgba(39,215,150,.12);border:1px solid rgba(39,215,150,.3)}
+  .hbadge.no{color:var(--red-soft);background:var(--red-tint);border:1px solid rgba(223,32,39,.3)}
+  .hist-clear{width:100%;margin-top:8px;padding:13px;border-radius:11px;border:1px solid var(--line);background:transparent;color:var(--txt-dim);font-family:inherit;font-weight:600;font-size:13px;cursor:pointer}
+  .hist-clear:active{border-color:var(--red);color:var(--red-soft)}
+  .hist-empty{text-align:center;color:var(--txt-dim);font-size:13.5px;line-height:1.6;padding:40px 20px}
 </style>
 </head>
 <body>
@@ -349,11 +383,11 @@
           <div class="tx"><div class="nm" data-i18n="tile_maint_nm">Bakım Rehberi</div><div class="ds" data-i18n="tile_maint_ds">Periyodik bakım kontrol listeleri</div></div>
           <span class="soon" data-i18n="soon">YAKINDA</span>
         </div>
-        <div class="tile muted">
-          <div class="ti">📞</div>
-          <div class="tx"><div class="nm" data-i18n="tile_sup_nm">Teknik Destek</div><div class="ds" data-i18n="tile_sup_ds">Uzman ekibe doğrudan ulaşın</div></div>
-          <span class="soon" data-i18n="soon">YAKINDA</span>
-        </div>
+        <button class="tile" onclick="openHistory()">
+          <div class="ti">🗂</div>
+          <div class="tx"><div class="nm" data-i18n="tile_hist_nm">Geçmiş Kayıtlar</div><div class="ds" data-i18n="tile_hist_ds">Daha önce baktığınız arızalar ve raporlar</div></div>
+          <div class="arrow">›</div>
+        </button>
       </div>
       <div class="verbadge" id="verBadge" onclick="checkForUpdate()"></div>
     </div>
@@ -413,6 +447,16 @@
     <div id="specBody"></div>
   </div>
 
+  <!-- ===== GEÇMİŞ ===== -->
+  <div id="historyPage" class="page pad">
+    <div class="page-head">
+      <div class="kick" data-i18n="hist_kick">Servis · Kayıt</div>
+      <h2 data-i18n="hist_h2">Geçmiş Kayıtlar</h2>
+      <div class="sub" data-i18n="hist_sub">Bu cihazda baktığınız arızalar. Kayıtlar yalnızca bu telefonda, yerel olarak saklanır.</div>
+    </div>
+    <div id="historyList"></div>
+  </div>
+
 </div>
 
 <script>
@@ -423,7 +467,7 @@
    sürüm değişince eski önbellek otomatik silinir ve güncelleme
    bildirimi tetiklenir.
    ============================================================ */
-const APP_VERSION = "1.3.0";
+const APP_VERSION = "1.4.0";
 const APP_DATE = "2026-06";
 
 /* ============================================================
@@ -568,7 +612,51 @@ const I18N = {
   rep_code:       { tr:"Arıza Kodu: ",               en:"Fault Code: " },
   rep_checks:     { tr:"Yapılan kontroller (hiçbiri çözmedi):", en:"Checks performed (none solved it):" },
   rep_tail:       { tr:"Tüm adımlar denendi, arıza devam ediyor. Daha ileri inceleme gerekiyor.",
-                    en:"All steps were tried, the fault persists. Further investigation is needed." }
+                    en:"All steps were tried, the fault persists. Further investigation is needed." },
+
+  /* RAPOR FORMU */
+  form_title:     { tr:"Rapor Bilgileri",             en:"Report Details" },
+  form_sub:       { tr:"Aşağıdaki bilgileri ekleyerek desteğe daha hızlı teşhis için yardımcı olun. Tümü isteğe bağlıdır.",
+                    en:"Add the details below to help support reach a faster diagnosis. All are optional." },
+  form_serial:    { tr:"Cihaz Seri No",               en:"Device Serial No" },
+  form_serial_ph: { tr:"ör. VU16-2024-00831",         en:"e.g. VU16-2024-00831" },
+  form_customer:  { tr:"Müşteri / Konum",             en:"Customer / Location" },
+  form_customer_ph:{ tr:"ör. Ahmet Yılmaz · Konya",   en:"e.g. John Smith · London" },
+  form_measure:   { tr:"Ölçtüğünüz Değerler",         en:"Measured Values" },
+  form_measure_ph:{ tr:"ör. Besleme 198V · kompresör sargı 2.1Ω · HP 28 bar",
+                    en:"e.g. Supply 198V · compressor winding 2.1Ω · HP 28 bar" },
+  form_note:      { tr:"Ek Not",                       en:"Additional Note" },
+  form_note_ph:   { tr:"Gözlemleriniz, denenen ekstra işlemler…",
+                    en:"Your observations, extra steps tried…" },
+  form_photo:     { tr:"Fotoğraf Ekle",               en:"Add Photo" },
+  form_photo_hint:{ tr:"Fotoğraflar WhatsApp açıldığında ataç simgesinden elle eklenir (otomatik gönderilemez).",
+                    en:"Photos are added manually via the attach icon once WhatsApp opens (they can't be sent automatically)." },
+  form_photo_count:{ tr:"fotoğraf seçildi",           en:"photo(s) selected" },
+  form_send:      { tr:"📋 WhatsApp ile Gönder",       en:"📋 Send via WhatsApp" },
+  form_skip:      { tr:"Bilgi eklemeden gönder",       en:"Send without details" },
+
+  rep_serial:     { tr:"Seri No: ",                   en:"Serial No: " },
+  rep_customer:   { tr:"Müşteri/Konum: ",             en:"Customer/Location: " },
+  rep_measure:    { tr:"Ölçülen değerler: ",          en:"Measured values: " },
+  rep_note:       { tr:"Not: ",                        en:"Note: " },
+  rep_photo_note: { tr:"(Teknisyen fotoğrafları ayrıca ekleyecek)", en:"(Technician will attach photos separately)" },
+  rep_date:       { tr:"Tarih: ",                     en:"Date: " },
+
+  /* GEÇMİŞ */
+  tile_hist_nm:   { tr:"Geçmiş Kayıtlar",             en:"History" },
+  tile_hist_ds:   { tr:"Daha önce baktığınız arızalar ve raporlar",
+                    en:"Faults you've reviewed and reports sent" },
+  hist_kick:      { tr:"Servis · Kayıt",             en:"Service · Log" },
+  hist_h2:        { tr:"Geçmiş Kayıtlar",             en:"History" },
+  hist_sub:       { tr:"Bu cihazda baktığınız arızalar. Kayıtlar yalnızca bu telefonda, yerel olarak saklanır.",
+                    en:"Faults reviewed on this device. Records are stored locally on this phone only." },
+  hist_empty:     { tr:"Henüz kayıt yok. Bir arıza çözümü tamamladığınızda burada görünür.",
+                    en:"No records yet. They appear here once you complete a fault session." },
+  hist_solved:    { tr:"Çözüldü",                     en:"Solved" },
+  hist_unsolved:  { tr:"Çözülmedi",                   en:"Not solved" },
+  hist_clear:     { tr:"Tüm geçmişi temizle",         en:"Clear all history" },
+  hist_clear_confirm:{ tr:"Tüm geçmiş kayıtları silinsin mi?", en:"Delete all history records?" },
+  hist_reopen:    { tr:"Arızayı aç",                  en:"Open fault" }
 };
 
 function t(key){
@@ -837,6 +925,7 @@ function setLang(l){
   else if(view==="specPage" && curSpecId) openSpec(curSpecId);
   else if(view==="detail" && cur && !isEr20View) openFault(cur.code);
   else if(view==="detail" && isEr20View) openEr20(lastEr20Sub);
+  else if(view==="historyPage") renderHistory();
 }
 
 
@@ -860,7 +949,7 @@ let curSpecId=null, isEr20View=false, lastEr20Sub=null;
 
 /* ---- navigation ---- */
 function showView(v){
-  ["home","groupPage","faultPage","detail","catalogPage","specPage"].forEach(id=>{
+  ["home","groupPage","faultPage","detail","catalogPage","specPage","historyPage"].forEach(id=>{
     const el=$(id);
     if(id===v){el.style.display="block";el.classList&&el.classList.add("show")}
     else{el.style.display="none";el.classList&&el.classList.remove("show")}
@@ -875,6 +964,7 @@ function goBack(){
   else if(view==="groupPage"){showView("home")}// grup listesi → ana sayfa
   else if(view==="specPage"){openCatalog()}    // teknik özellik → katalog listesi
   else if(view==="catalogPage"){showView("home")} // katalog → ana sayfa
+  else if(view==="historyPage"){showView("home")} // geçmiş → ana sayfa
   else{showView("home")}
 }
 
@@ -1062,7 +1152,7 @@ function renderFaults(filter=""){
 /* ---- detail ---- */
 function openFault(code){
   if(code==="Er20"){openEr20();return}
-  isEr20View=false;
+  isEr20View=false; curSessionId=null;
   cur=activeFaultsL().find(x=>x.code===code);stepIdx=0;
   const distinguishHtml = cur.distinguish
     ? `<div class="distinguish"><div class="dh">${t("det_mix")}</div><div class="dtx">${cur.distinguish}</div></div>`
@@ -1150,41 +1240,195 @@ function showOutcome(type){
       <div class="oc-sub">${cur.code}${t("out_win_sub_a")}</div>
       <button class="home-btn" onclick="goHome()">${t("btn_home")}</button>
       <button class="restart" onclick="restart()">${t("btn_restart")}</button></div>`;
+    saveHistory("solved");
   }else{
     $("pcount").textContent=t("out_unsolved_count");
     o.innerHTML=`<div class="oc-card esc"><div class="oc-ic">⚠</div><div class="oc-tt">${t("out_esc_tt")}</div>
       <div class="oc-sub">${t("out_esc_sub_a")}${cur.code}${t("out_esc_sub_b")}</div>
-      <button class="report-btn" onclick="sendReport()">${t("btn_report")}</button>
+      <div id="reportFormHost"></div>
+      <button class="report-btn" onclick="openReportForm()" id="openFormBtn">${t("btn_report")}</button>
       <a class="call" href="tel:+905311014004" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">${t("btn_call")}</a>
       <button class="home-btn" onclick="goHome()">${t("btn_home")}</button>
       <button class="restart" onclick="restart()">${t("btn_restart")}</button></div>`;
+    // çözülemeyen oturumu geçmişe kaydet
+    saveHistory("unsolved");
   }
   o.scrollIntoView({behavior:"smooth",block:"center"});
 }
 function goHome(){stepIdx=0;$("outcome").classList.remove("show");$("outcome").innerHTML="";showView("home")}
 function restart(){stepIdx=0;$("outcome").classList.remove("show");$("outcome").innerHTML="";renderSteps();window.scrollTo({top:0,behavior:"smooth"})}
 
-/* Çözülemedi raporu: yapılan kontrolleri özetleyip WhatsApp ile destek hattına gönder */
-function sendReport(){
+/* ===== ÇÖZÜLEMEDİ RAPORU — form + fotoğraf + WhatsApp ===== */
+let reportPhotos = [];  // {name, dataUrl} — yalnızca önizleme; WhatsApp'a elle eklenir
+
+function openReportForm(){
+  const host = $("reportFormHost");
+  if(!host) return;
+  const btn = $("openFormBtn");
+  if(btn) btn.style.display = "none";
+  reportPhotos = [];
+  host.innerHTML = `
+    <div class="repform">
+      <div class="rf-tt">${t("form_title")}</div>
+      <div class="rf-sub">${t("form_sub")}</div>
+      <div class="rf-field">
+        <label>${t("form_serial")}</label>
+        <input id="rfSerial" type="text" placeholder="${t("form_serial_ph")}" autocomplete="off">
+      </div>
+      <div class="rf-field">
+        <label>${t("form_customer")}</label>
+        <input id="rfCustomer" type="text" placeholder="${t("form_customer_ph")}" autocomplete="off">
+      </div>
+      <div class="rf-field">
+        <label>${t("form_measure")}</label>
+        <textarea id="rfMeasure" placeholder="${t("form_measure_ph")}"></textarea>
+      </div>
+      <div class="rf-field">
+        <label>${t("form_note")}</label>
+        <textarea id="rfNote" placeholder="${t("form_note_ph")}"></textarea>
+      </div>
+      <div class="rf-field">
+        <label>${t("form_photo")}</label>
+        <div class="rf-photo">
+          <label class="rf-photo-btn">📷 ${t("form_photo")}
+            <input id="rfPhoto" type="file" accept="image/*" multiple capture="environment" style="display:none" onchange="addReportPhoto(event)">
+          </label>
+          <span class="rf-photo-count" id="rfPhotoCount"></span>
+        </div>
+        <div class="rf-thumbs" id="rfThumbs"></div>
+        <div class="rf-hint">${t("form_photo_hint")}</div>
+      </div>
+      <button class="report-btn" onclick="sendReport()">${t("form_send")}</button>
+      <button class="skip-btn" onclick="sendReport(true)">${t("form_skip")}</button>
+    </div>`;
+  host.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function addReportPhoto(ev){
+  const files = Array.from(ev.target.files||[]);
+  files.forEach(f=>{
+    const reader = new FileReader();
+    reader.onload = e=>{
+      reportPhotos.push({name:f.name, dataUrl:e.target.result});
+      renderReportThumbs();
+    };
+    reader.readAsDataURL(f);
+  });
+  ev.target.value = ""; // aynı dosya tekrar seçilebilsin
+}
+function removeReportPhoto(i){ reportPhotos.splice(i,1); renderReportThumbs(); }
+function renderReportThumbs(){
+  const thumbs = $("rfThumbs"), cnt = $("rfPhotoCount");
+  if(!thumbs) return;
+  thumbs.innerHTML = reportPhotos.map((p,i)=>
+    `<div class="rf-thumb"><img src="${p.dataUrl}" alt=""><button class="rm" onclick="removeReportPhoto(${i})">×</button></div>`
+  ).join("");
+  if(cnt) cnt.textContent = reportPhotos.length ? (reportPhotos.length+" "+t("form_photo_count")) : "";
+}
+
+/* Zengin WhatsApp raporu: kontroller + form bilgileri */
+function sendReport(skip){
   const grp=(activeGroup&&activeGroup.name)||"";
+  const serial   = skip ? "" : (($("rfSerial")||{}).value||"").trim();
+  const customer = skip ? "" : (($("rfCustomer")||{}).value||"").trim();
+  const measure  = skip ? "" : (($("rfMeasure")||{}).value||"").trim();
+  const note     = skip ? "" : (($("rfNote")||{}).value||"").trim();
+
   let lines=[];
   lines.push(t("rep_title"));
+  lines.push(t("rep_date")+new Date().toLocaleString(LANG==="en"?"en-GB":"tr-TR"));
   lines.push(t("rep_product")+grp);
   lines.push(t("rep_code")+cur.code+" — "+cur.name);
+  if(serial)   lines.push(t("rep_serial")+serial);
+  if(customer) lines.push(t("rep_customer")+customer);
   lines.push("");
   lines.push(t("rep_checks"));
   cur.steps.forEach((s,i)=>{ lines.push((i+1)+". "+s.tt+" ✓"); });
   lines.push("");
+  if(measure){ lines.push(t("rep_measure")+measure); }
+  if(note){ lines.push(t("rep_note")+note); }
+  if(measure||note) lines.push("");
+  if(!skip && reportPhotos.length){ lines.push(reportPhotos.length+" 📷 "+t("rep_photo_note")); lines.push(""); }
   lines.push(t("rep_tail"));
+
+  // geçmiş kaydını rapor detaylarıyla zenginleştir
+  saveHistory("unsolved", {serial, customer, measure, note, photos:reportPhotos.length});
+
   const text=encodeURIComponent(lines.join("\n"));
-  // Destek hattının WhatsApp numarası (90 + numara)
   const wa="https://wa.me/905311014004?text="+text;
   window.open(wa,"_blank");
 }
 
+/* ===== GEÇMİŞ (yerel kayıt) =====
+   localStorage yalnızca gerçek sitede (GitHub Pages) çalışır; erişilemezse sessizce atlanır. */
+const HIST_KEY = "varmeks_history_v1";
+let curSessionId = null;  // o anki arıza oturumunun kimliği (tekrar kaydı önler)
+
+function histAvailable(){ try{ const k="__t"; localStorage.setItem(k,"1"); localStorage.removeItem(k); return true; }catch(_){ return false; } }
+function loadHistory(){
+  try{ return JSON.parse(localStorage.getItem(HIST_KEY)||"[]"); }catch(_){ return []; }
+}
+function writeHistory(arr){
+  try{ localStorage.setItem(HIST_KEY, JSON.stringify(arr.slice(0,100))); }catch(_){}
+}
+/* Oturumu kaydet/güncelle. İlk çağrı yeni kayıt açar; sonraki çağrılar (rapor detayı) aynı kaydı günceller. */
+function saveHistory(result, extra){
+  if(!histAvailable() || !cur || !cur.code) return;
+  let arr = loadHistory();
+  const rec = {
+    id: curSessionId || (curSessionId = "s"+Date.now()),
+    code: cur.code,
+    name: cur.name || "",
+    group: (activeGroup&&activeGroup.id)||"",
+    groupName: (activeGroup&&activeGroup.name)||"",
+    result: result,                 // "solved" | "unsolved"
+    ts: Date.now(),
+    detail: extra||null
+  };
+  const idx = arr.findIndex(x=>x.id===rec.id);
+  if(idx>=0){ arr[idx] = Object.assign(arr[idx], rec); }
+  else { arr.unshift(rec); }
+  writeHistory(arr);
+}
+function clearHistory(){
+  if(confirm(t("hist_clear_confirm"))){ writeHistory([]); renderHistory(); }
+}
+function openHistory(){ renderHistory(); showView("historyPage"); }
+function fmtHistDate(ts){
+  try{ return new Date(ts).toLocaleString(LANG==="en"?"en-GB":"tr-TR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}); }
+  catch(_){ return ""; }
+}
+function renderHistory(){
+  const list = $("historyList");
+  if(!list) return;
+  const arr = loadHistory();
+  if(!arr.length){
+    list.innerHTML = `<div class="hist-empty">${t("hist_empty")}</div>`;
+    return;
+  }
+  let html = arr.map(r=>{
+    const ok = r.result==="solved";
+    const badge = ok ? `<span class="hbadge ok">${t("hist_solved")}</span>` : `<span class="hbadge no">${t("hist_unsolved")}</span>`;
+    const cust = (r.detail&&r.detail.customer) ? " · "+r.detail.customer : "";
+    return `<button class="histitem" onclick="reopenFromHistory('${r.group}','${r.code}')">
+      <span class="hcode">${r.code.replace('Er','')}</span>
+      <span class="hmeta"><span class="hnm">${r.name}</span><span class="hsub">${fmtHistDate(r.ts)}${cust}</span></span>
+      ${badge}</button>`;
+  }).join("");
+  html += `<button class="hist-clear" onclick="clearHistory()">${t("hist_clear")}</button>`;
+  list.innerHTML = html;
+}
+/* Geçmişten bir arızayı yeniden aç */
+function reopenFromHistory(groupId, code){
+  const g = GROUPS.find(x=>x.id===groupId) || GROUPS[0];
+  activeGroup = g; activeFaults = g.faults;
+  if(code==="Er20"){ openEr20(); return; }
+  openFault(code);
+}
+
 /* ===== Er20 ALT KOD ÇÖZÜCÜ ===== */
 function openEr20(presetSub){
-  isEr20View=true; cur={code:"Er20"}; lastEr20Sub=(presetSub!=null&&!isNaN(presetSub))?presetSub:null;
+  isEr20View=true; curSessionId=null; cur={code:"Er20"}; lastEr20Sub=(presetSub!=null&&!isNaN(presetSub))?presetSub:null;
   $("detail").innerHTML=`
     <div class="hero">
       <div class="row"><div class="bigcode">Er20</div><div class="sevtag">${t("er20_sev")}</div></div>
