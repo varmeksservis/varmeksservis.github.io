@@ -697,7 +697,7 @@ function showOutcome(type){
     $("pcount").textContent="Çözülmedi";
     o.innerHTML=`<div class="oc-card esc"><div class="oc-ic">⚠</div><div class="oc-tt">Acil Destek Gerekli</div>
       <div class="oc-sub">Tüm kontroller yapıldı ancak ${cur.code} devam ediyor. Daha derin bir arıza (kart, modül veya bileşen) söz konusu olabilir. Yaptığınız kontrolleri ve ölçtüğünüz değerleri not edip teknik desteğe iletin.</div>
-      <button class="call" onclick="alert('Teknik Destek Hattı:\\n0850 XXX XX XX\\n\\n(Örnek numara — gerçeğiyle değiştirilebilir.)')">📞 Teknik Desteği Ara</button>
+      <a class="call" href="tel:+905322237199" style="text-decoration:none;display:inline-flex;align-items:center;justify-content:center">📞 Teknik Desteği Ara · 0 532 223 71 99</a>
       <button class="restart" onclick="restart()">↺ Baştan Başla</button></div>`;
   }
   o.scrollIntoView({behavior:"smooth",block:"center"});
@@ -808,29 +808,73 @@ function decodeEr20(){
 showView("home");
 </script>
 <script>
-/* PWA: cevrimdisi calisma + ana ekrana ekleme */
+/* PWA: çevrimdışı çalışma + OTOMATİK GÜNCELLEME
+   Mantık: internet varsa her zaman en yeni sürümü ağdan getir (network-first),
+   internet yoksa önbellekten çalış. Böylece güncellemeler anında gelir,
+   çevrimdışı kullanım da korunur. */
 if ('serviceWorker' in navigator) {
   const swCode = `
-    const CACHE = 'varmeks-v1';
+    const CACHE = 'varmeks-v2';
     self.addEventListener('install', e => { self.skipWaiting(); });
-    self.addEventListener('activate', e => { e.waitUntil(self.clients.claim()); });
+    self.addEventListener('activate', e => {
+      e.waitUntil(
+        caches.keys().then(keys => Promise.all(
+          keys.filter(k => k !== CACHE).map(k => caches.delete(k))
+        )).then(() => self.clients.claim())
+      );
+    });
     self.addEventListener('fetch', e => {
+      if (e.request.method !== 'GET') return;
       e.respondWith(
-        caches.open(CACHE).then(cache =>
-          cache.match(e.request).then(hit => {
-            const net = fetch(e.request).then(res => {
-              try { cache.put(e.request, res.clone()); } catch(_){}
-              return res;
-            }).catch(() => hit);
-            return hit || net;
-          })
+        fetch(e.request).then(res => {
+          // ağdan geldi → önbelleği güncelle, en yeni sürümü göster
+          const copy = res.clone();
+          caches.open(CACHE).then(c => { try { c.put(e.request, copy); } catch(_){} });
+          return res;
+        }).catch(() =>
+          // internet yok → önbellekten ver (çevrimdışı çalışma)
+          caches.open(CACHE).then(c => c.match(e.request))
         )
       );
     });
   `;
   const blob = new Blob([swCode], { type: 'application/javascript' });
   const url = URL.createObjectURL(blob);
-  navigator.serviceWorker.register(url).catch(()=>{});
+  navigator.serviceWorker.register(url).then(reg => {
+    // yeni sürüm bulununca kullanıcıya nazik bildirim
+    reg.addEventListener('updatefound', () => {
+      const nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener('statechange', () => {
+        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+          showUpdateToast();
+        }
+      });
+    });
+  }).catch(()=>{});
+
+  // periyodik olarak güncelleme kontrolü (uygulama açıkken)
+  setInterval(() => {
+    navigator.serviceWorker.getRegistration().then(r => r && r.update()).catch(()=>{});
+  }, 60000);
+}
+
+function showUpdateToast(){
+  if (document.getElementById('updToast')) return;
+  const t = document.createElement('div');
+  t.id = 'updToast';
+  t.innerHTML = '✓ Yeni sürüm hazır <button onclick="location.reload()">Yenile</button>';
+  t.style.cssText = 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;'
+    + 'background:#16202b;color:#fff;padding:12px 16px;border-radius:12px;font-family:Sora,system-ui,sans-serif;'
+    + 'font-size:13.5px;font-weight:600;box-shadow:0 8px 30px rgba(0,0,0,.3);display:flex;align-items:center;gap:12px;'
+    + 'max-width:90%;animation:updin .3s ease';
+  const b = t.querySelector('button');
+  b.style.cssText = 'background:#df2027;color:#fff;border:none;border-radius:8px;padding:7px 14px;'
+    + 'font-family:inherit;font-weight:700;font-size:13px;cursor:pointer';
+  const st = document.createElement('style');
+  st.textContent = '@keyframes updin{from{opacity:0;transform:translate(-50%,12px)}to{opacity:1;transform:translate(-50%,0)}}';
+  document.head.appendChild(st);
+  document.body.appendChild(t);
 }
 </script>
 </body>
