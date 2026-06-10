@@ -258,8 +258,8 @@
   .step.active .step-num{background:var(--red-tint);border-color:var(--red);color:var(--red-soft)}
   .step.done .step-num{background:rgba(39,215,150,.15);border-color:var(--green);color:var(--green)}
   .step-tt{font-weight:700;font-size:16.5px;letter-spacing:-.2px;line-height:1.2;padding-top:6px}
-  .step-body{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.2,.8,.2,1)}
-  .step.active .step-body{max-height:2200px}
+  .step-body{max-height:0;overflow:hidden;transition:max-height .45s cubic-bezier(.2,.8,.2,1),overflow 0s .45s}
+  .step.active .step-body{max-height:6000px;overflow:visible;transition:max-height .45s cubic-bezier(.2,.8,.2,1),overflow 0s 0s}
   .step-inner{padding:0 16px 16px 63px}
   .step-inner .how{font-size:14px;line-height:1.65;color:#2c3a47;margin-bottom:4px}
 
@@ -527,7 +527,7 @@
    sürüm değişince eski önbellek otomatik silinir ve güncelleme
    bildirimi tetiklenir.
    ============================================================ */
-const APP_VERSION = "1.7.0";
+const APP_VERSION = "1.7.1";
 const APP_DATE = "2026-06";
 
 /* ============================================================
