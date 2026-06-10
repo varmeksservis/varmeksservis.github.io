@@ -516,7 +516,7 @@
    sürüm değişince eski önbellek otomatik silinir ve güncelleme
    bildirimi tetiklenir.
    ============================================================ */
-const APP_VERSION = "1.5.0";
+const APP_VERSION = "1.5.1";
 const APP_DATE = "2026-06";
 
 /* ============================================================
@@ -1531,9 +1531,14 @@ function buildAssistantIndex(){
       (f.steps||[]).forEach(s=>{ parts.push(s.tt); });
       const en = enMap[f.code];
       if(en){ parts.push(en.name, en.short, (en.causes||[]).join(" ")); (en.steps||[]).forEach(s=>parts.push(s.tt)); }
+      const blob = asstNorm(parts.join(" "));
+      // benzersiz kelimeler (2+ harf) — bulanık eşleştirme için
+      const wordSet = {};
+      blob.split(" ").forEach(w=>{ if(w.length>=2) wordSet[w]=1; });
       ASST_INDEX.push({
         group:g.id, groupName:g.name, code:f.code, name:f.name,
-        short:f.short, blob:asstNorm(parts.join(" "))
+        short:f.short, blob:blob, words:Object.keys(wordSet),
+        nameNorm:asstNorm(f.name)
       });
     });
   });
@@ -1557,7 +1562,47 @@ function asstDetectCode(raw){
   return "Er"+num;
 }
 
-/* Belirti araması: kelime bazlı puanlama */
+/* Levenshtein düzenleme mesafesi — erken çıkışlı (max'tan fazlaysa vazgeç) */
+function asstLev(a, b, max){
+  const la=a.length, lb=b.length;
+  if(Math.abs(la-lb) > max) return max+1;
+  let prev=new Array(lb+1), cur=new Array(lb+1);
+  for(let j=0;j<=lb;j++) prev[j]=j;
+  for(let i=1;i<=la;i++){
+    cur[0]=i; let rowMin=cur[0];
+    for(let j=1;j<=lb;j++){
+      const cost = a.charCodeAt(i-1)===b.charCodeAt(j-1) ? 0 : 1;
+      cur[j]=Math.min(prev[j]+1, cur[j-1]+1, prev[j-1]+cost);
+      if(cur[j]<rowMin) rowMin=cur[j];
+    }
+    if(rowMin > max) return max+1; // bu satırın tamamı toleransı aştı → erken çık
+    const tmp=prev; prev=cur; cur=tmp;
+  }
+  return prev[lb];
+}
+
+/* Bir sorgu kelimesinin, bir kayıttaki kelimelerle en iyi eşleşme puanı.
+   3 = tam kelime, 2 = bulanık (yazım hatası), 1 = substring/kısmi, 0 = yok */
+function asstWordScore(qw, rec){
+  // 1) tam kelime eşleşmesi
+  if(rec.words.indexOf(qw)>=0) return 3;
+  // 2) substring (kelime içinde geçiyor)
+  let sub = (rec.blob.indexOf(qw)>=0);
+  // 3) bulanık: yalnızca 4+ harfli kelimelerde (kısa kelimede yanlış pozitif riski yüksek)
+  if(qw.length>=4){
+    const tol = qw.length<=6 ? 1 : 2;
+    for(let i=0;i<rec.words.length;i++){
+      const rw=rec.words[i];
+      if(rw.length<4) continue;
+      if(Math.abs(rw.length-qw.length) > tol) continue;
+      if(asstLev(qw, rw, tol) <= tol) return 2;
+    }
+  }
+  if(sub) return 1;
+  return 0;
+}
+
+/* Belirti araması: yazım hatasına toleranslı, kelime bazlı puanlama */
 function asstSearch(raw){
   const idx = buildAssistantIndex();
   const q = asstNorm(raw);
@@ -1567,10 +1612,10 @@ function asstSearch(raw){
   let scored = idx.map(rec=>{
     let score=0;
     words.forEach(w=>{
-      if(rec.blob.indexOf(" "+w+" ")>=0 || rec.blob.startsWith(w+" ") || rec.blob.endsWith(" "+w)) score+=3; // tam kelime
-      else if(rec.blob.indexOf(w)>=0) score+=1; // kısmi
-      // kod adında geçiyorsa ekstra ağırlık
-      if(asstNorm(rec.name).indexOf(w)>=0) score+=2;
+      const ws = asstWordScore(w, rec);
+      score += ws;
+      // arıza ADINDA geçiyorsa (tam ya da bulanık) ekstra ağırlık
+      if(ws>=2 && rec.nameNorm.indexOf(w)>=0) score+=2;
     });
     return {rec, score};
   }).filter(x=>x.score>0);
