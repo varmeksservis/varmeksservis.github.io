@@ -339,6 +339,34 @@
   .hist-clear{width:100%;margin-top:8px;padding:13px;border-radius:11px;border:1px solid var(--line);background:transparent;color:var(--txt-dim);font-family:inherit;font-weight:600;font-size:13px;cursor:pointer}
   .hist-clear:active{border-color:var(--red);color:var(--red-soft)}
   .hist-empty{text-align:center;color:var(--txt-dim);font-size:13.5px;line-height:1.6;padding:40px 20px}
+
+  /* ---- TEKNİK ASİSTAN (sohbet) ---- */
+  #assistantPage{display:flex;flex-direction:column}
+  .chat-scroll{flex:1;overflow-y:auto;padding-bottom:8px}
+  .msg{max-width:86%;padding:12px 14px;border-radius:15px;font-size:14px;line-height:1.55;margin-bottom:11px;word-wrap:break-word}
+  .msg.bot{background:var(--surface);border:1px solid var(--line);color:var(--txt);border-bottom-left-radius:5px;align-self:flex-start}
+  .msg.user{background:linear-gradient(135deg,var(--blue),#3fa7ff);color:#fff;border-bottom-right-radius:5px;align-self:flex-end;margin-left:auto}
+  .msg-row{display:flex;flex-direction:column}
+  .asst-card{background:var(--surface);border:1px solid var(--line);border-radius:13px;padding:13px 14px;margin-bottom:9px;cursor:pointer;transition:border-color .2s;display:flex;align-items:center;gap:12px;max-width:86%;align-self:flex-start}
+  .asst-card:active{border-color:var(--blue)}
+  .asst-card .ac-code{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:15px;color:var(--red-soft);min-width:46px}
+  .asst-card .ac-meta{flex:1;min-width:0}
+  .asst-card .ac-nm{font-weight:700;font-size:13.5px;color:var(--txt)}
+  .asst-card .ac-sub{font-size:11.5px;color:var(--txt-dim);margin-top:3px}
+  .asst-card .ac-go{color:var(--blue);font-size:12px;font-weight:700;white-space:nowrap}
+  .asst-card .ac-grp{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--txt-dim);border:1px solid var(--line);border-radius:6px;padding:2px 6px;margin-top:5px;display:inline-block}
+  .asst-special{background:var(--red-tint);border:1px solid rgba(223,32,39,.3);border-radius:13px;padding:13px 14px;margin-bottom:9px;cursor:pointer;max-width:86%;align-self:flex-start;font-weight:700;font-size:13.5px;color:var(--red-soft)}
+  .asst-special:active{opacity:.85}
+  .asst-link{display:inline-block;margin:2px 0 11px;font-size:13px;color:var(--blue);font-weight:700;cursor:pointer;align-self:flex-start}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;margin:2px 0 12px}
+  .chip{background:var(--surface-2);border:1px solid var(--line);border-radius:99px;padding:8px 13px;font-size:12.5px;color:var(--txt-dim);cursor:pointer;transition:border-color .2s,color .2s}
+  .chip:active{border-color:var(--blue);color:var(--blue)}
+  .chips-label{font-size:12px;color:var(--txt-dim);margin-bottom:7px;font-weight:600}
+  .chat-input{position:sticky;bottom:0;display:flex;gap:9px;padding:12px 0 4px;background:var(--bg)}
+  .chat-input input{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:13px 14px;font-family:inherit;font-size:14px;color:var(--txt)}
+  .chat-input input:focus{outline:none;border-color:var(--blue)}
+  .chat-input button{background:linear-gradient(135deg,var(--blue),#3fa7ff);color:#fff;border:none;border-radius:12px;padding:0 18px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
+  .chat-clear{font-size:12px;color:var(--txt-dim);text-align:center;cursor:pointer;padding:6px;margin-top:2px}
 </style>
 </head>
 <body>
@@ -369,6 +397,12 @@
             <div class="nm" data-i18n="tile_fault_nm">Arıza Çözüm Adımları</div>
             <div class="ds" data-i18n="tile_fault_ds">Cihazın verdiği hata kodunu seçin, adım adım birlikte çözelim</div>
           </div>
+          <div class="arrow">›</div>
+        </button>
+
+        <button class="tile" onclick="openAssistant()">
+          <div class="ti">💬</div>
+          <div class="tx"><div class="nm" data-i18n="tile_asst_nm">Teknik Asistan</div><div class="ds" data-i18n="tile_asst_ds">Belirtiyi yazın, doğru arıza çözümüne yönlendirelim</div></div>
           <div class="arrow">›</div>
         </button>
 
@@ -457,6 +491,21 @@
     <div id="historyList"></div>
   </div>
 
+  <!-- ===== TEKNİK ASİSTAN ===== -->
+  <div id="assistantPage" class="page pad">
+    <div class="page-head">
+      <div class="kick" data-i18n="asst_kick">Servis · Asistan</div>
+      <h2 data-i18n="asst_h2">Teknik Asistan</h2>
+    </div>
+    <div class="chat-scroll" id="chatScroll"></div>
+    <div class="chat-input">
+      <input id="asstInput" type="text" data-i18n-ph="asst_ph" placeholder="Belirti veya hata kodu yazın…" autocomplete="off"
+             onkeydown="if(event.key==='Enter')sendAssistantMsg()">
+      <button onclick="sendAssistantMsg()" data-i18n="asst_send">Gönder</button>
+    </div>
+    <div class="chat-clear" onclick="clearAssistant()" data-i18n="asst_clear">Sohbeti temizle</div>
+  </div>
+
 </div>
 
 <script>
@@ -467,7 +516,7 @@
    sürüm değişince eski önbellek otomatik silinir ve güncelleme
    bildirimi tetiklenir.
    ============================================================ */
-const APP_VERSION = "1.4.0";
+const APP_VERSION = "1.5.0";
 const APP_DATE = "2026-06";
 
 /* ============================================================
@@ -656,7 +705,31 @@ const I18N = {
   hist_unsolved:  { tr:"Çözülmedi",                   en:"Not solved" },
   hist_clear:     { tr:"Tüm geçmişi temizle",         en:"Clear all history" },
   hist_clear_confirm:{ tr:"Tüm geçmiş kayıtları silinsin mi?", en:"Delete all history records?" },
-  hist_reopen:    { tr:"Arızayı aç",                  en:"Open fault" }
+  hist_reopen:    { tr:"Arızayı aç",                  en:"Open fault" },
+
+  /* TEKNİK ASİSTAN */
+  tile_asst_nm:   { tr:"Teknik Asistan",             en:"Technical Assistant" },
+  tile_asst_ds:   { tr:"Belirtiyi yazın, doğru arıza çözümüne yönlendirelim",
+                    en:"Describe the symptom, we'll point you to the right fix" },
+  asst_kick:      { tr:"Servis · Asistan",           en:"Service · Assistant" },
+  asst_h2:        { tr:"Teknik Asistan",             en:"Technical Assistant" },
+  asst_intro:     { tr:"Merhaba! Cihazın belirtisini ya da hata kodunu yazın — örneğin \"egzoz sıcaklığı yüksek\", \"fan dönmüyor\", \"su akışı yok\" veya \"20.48\". Sizi doğru arıza çözümüne yönlendireyim.",
+                    en:"Hi! Type the device symptom or fault code — e.g. \"exhaust temperature high\", \"fan not spinning\", \"no water flow\" or \"20.48\". I'll point you to the right fix." },
+  asst_ph:        { tr:"Belirti veya hata kodu yazın…", en:"Type a symptom or fault code…" },
+  asst_send:      { tr:"Gönder",                      en:"Send" },
+  asst_chips_label:{ tr:"Sık kullanılanlar:",        en:"Common ones:" },
+  asst_found_one: { tr:"Bu arızaya bakalım:",         en:"Let's look at this fault:" },
+  asst_found_many:{ tr:"Şu olası arızaları buldum — dokununca çözüm adımlarına gidelim:",
+                    en:"Here are the likely faults — tap one to open the solution steps:" },
+  asst_none:      { tr:"Bununla tam eşleşen bir arıza bulamadım. Farklı kelimelerle deneyin (örn. \"basınç\", \"sensör\", \"iletişim\") ya da hata kodunu doğrudan yazın. Dilerseniz tüm kod listesine de bakabilirsiniz.",
+                    en:"I couldn't find an exact match. Try different words (e.g. \"pressure\", \"sensor\", \"communication\") or type the fault code directly. You can also browse the full code list." },
+  asst_group_hint:{ tr:"Ürün",                        en:"Product" },
+  asst_open:      { tr:"Çözüme git ›",               en:"Open solution ›" },
+  asst_er20:      { tr:"Bu bir Er20 alt kodudur. Sürücü alt-kod çözücüsünü açalım:",
+                    en:"This is an Er20 sub-code. Let's open the driver sub-code decoder:" },
+  asst_er20_btn:  { tr:"Er20 Çözücüyü Aç ›",          en:"Open Er20 Decoder ›" },
+  asst_browse:    { tr:"Tüm kod listesine bak",       en:"Browse all codes" },
+  asst_clear:     { tr:"Sohbeti temizle",            en:"Clear chat" }
 };
 
 function t(key){
@@ -926,6 +999,7 @@ function setLang(l){
   else if(view==="detail" && cur && !isEr20View) openFault(cur.code);
   else if(view==="detail" && isEr20View) openEr20(lastEr20Sub);
   else if(view==="historyPage") renderHistory();
+  else if(view==="assistantPage"){ asstStarted=false; openAssistant(); }
 }
 
 
@@ -949,7 +1023,7 @@ let curSpecId=null, isEr20View=false, lastEr20Sub=null;
 
 /* ---- navigation ---- */
 function showView(v){
-  ["home","groupPage","faultPage","detail","catalogPage","specPage","historyPage"].forEach(id=>{
+  ["home","groupPage","faultPage","detail","catalogPage","specPage","historyPage","assistantPage"].forEach(id=>{
     const el=$(id);
     if(id===v){el.style.display="block";el.classList&&el.classList.add("show")}
     else{el.style.display="none";el.classList&&el.classList.remove("show")}
@@ -965,6 +1039,7 @@ function goBack(){
   else if(view==="specPage"){openCatalog()}    // teknik özellik → katalog listesi
   else if(view==="catalogPage"){showView("home")} // katalog → ana sayfa
   else if(view==="historyPage"){showView("home")} // geçmiş → ana sayfa
+  else if(view==="assistantPage"){showView("home")} // asistan → ana sayfa
   else{showView("home")}
 }
 
@@ -1424,6 +1499,212 @@ function reopenFromHistory(groupId, code){
   activeGroup = g; activeFaults = g.faults;
   if(code==="Er20"){ openEr20(); return; }
   openFault(code);
+}
+
+/* ============================================================
+   TEKNİK ASİSTAN — çevrimdışı akıllı arama
+   Gerçek bir AI değildir; teknisyenin yazdığı belirti/kod metnini
+   arıza verisinde puanlayarak en olası arızalara yönlendirir.
+   ============================================================ */
+
+/* Türkçe karakter ve büyük/küçük harf duyarsız normalize */
+function asstNorm(s){
+  return (s||"").toLocaleLowerCase("tr")
+    .replace(/ı/g,"i").replace(/ş/g,"s").replace(/ğ/g,"g")
+    .replace(/ü/g,"u").replace(/ö/g,"o").replace(/ç/g,"c")
+    .replace(/<[^>]+>/g," ")           // html etiketlerini at
+    .replace(/[^a-z0-9\s.]/g," ")      // noktalama → boşluk (nokta hariç: 20.48)
+    .replace(/\s+/g," ").trim();
+}
+
+/* Her arıza için aranabilir metin indeksi (TR + EN birlikte) — bir kez kurulur */
+let ASST_INDEX = null;
+function buildAssistantIndex(){
+  if(ASST_INDEX) return ASST_INDEX;
+  ASST_INDEX = [];
+  GROUPS.forEach(g=>{
+    const trSet = g.faults || [];
+    const enMap = (g.id==="varmup") ? (typeof FAULTS_EN!=="undefined"?FAULTS_EN:{})
+               : (g.id==="varmsilent") ? (typeof SILENT_FAULTS_EN!=="undefined"?SILENT_FAULTS_EN:{}) : {};
+    trSet.forEach(f=>{
+      let parts = [f.code, f.name, f.short, f.meaning, (f.causes||[]).join(" ")];
+      (f.steps||[]).forEach(s=>{ parts.push(s.tt); });
+      const en = enMap[f.code];
+      if(en){ parts.push(en.name, en.short, (en.causes||[]).join(" ")); (en.steps||[]).forEach(s=>parts.push(s.tt)); }
+      ASST_INDEX.push({
+        group:g.id, groupName:g.name, code:f.code, name:f.name,
+        short:f.short, blob:asstNorm(parts.join(" "))
+      });
+    });
+  });
+  return ASST_INDEX;
+}
+
+/* Er20 alt kodu mu? "20.48", "er20 48", "20-48" gibi girişleri yakala */
+function asstDetectEr20(raw){
+  const n = asstNorm(raw);
+  // 20.x veya er20 ... biçimleri
+  if(/\b20[.\s-]\d{1,3}\b/.test(n) || /\ber\s*20\b/.test(n) || /\b20\b.*\b(alt|sub)\b/.test(n)) return true;
+  return false;
+}
+
+/* Doğrudan kod araması: "er05", "er 5", "05", "5" */
+function asstDetectCode(raw){
+  const n = asstNorm(raw).replace(/\s+/g,"");
+  let m = n.match(/er0*(\d{1,2})/) || n.match(/^0*(\d{1,2})$/);
+  if(!m) return null;
+  const num = m[1].padStart(2,"0");
+  return "Er"+num;
+}
+
+/* Belirti araması: kelime bazlı puanlama */
+function asstSearch(raw){
+  const idx = buildAssistantIndex();
+  const q = asstNorm(raw);
+  if(!q) return [];
+  const words = q.split(" ").filter(w=>w.length>=2);
+  if(!words.length) return [];
+  let scored = idx.map(rec=>{
+    let score=0;
+    words.forEach(w=>{
+      if(rec.blob.indexOf(" "+w+" ")>=0 || rec.blob.startsWith(w+" ") || rec.blob.endsWith(" "+w)) score+=3; // tam kelime
+      else if(rec.blob.indexOf(w)>=0) score+=1; // kısmi
+      // kod adında geçiyorsa ekstra ağırlık
+      if(asstNorm(rec.name).indexOf(w)>=0) score+=2;
+    });
+    return {rec, score};
+  }).filter(x=>x.score>0);
+  scored.sort((a,b)=> b.score - a.score);
+  return scored.slice(0,3).map(x=>x.rec);
+}
+
+/* ---- sohbet arayüzü ---- */
+let asstStarted = false;
+
+function openAssistant(){
+  showView("assistantPage");
+  if(!asstStarted){
+    asstStarted = true;
+    $("chatScroll").innerHTML = "";
+    asstBotMsg(t("asst_intro"));
+    asstShowChips();
+  }
+  setTimeout(()=>{ const i=$("asstInput"); if(i) i.focus(); }, 200);
+}
+
+function asstScroll(){ const s=$("chatScroll"); if(s) s.scrollTop = s.scrollHeight; }
+
+function asstBotMsg(html){
+  const s=$("chatScroll"); if(!s) return;
+  const d=document.createElement("div"); d.className="msg-row";
+  d.innerHTML = `<div class="msg bot">${html}</div>`;
+  s.appendChild(d); asstScroll();
+}
+function asstUserMsg(text){
+  const s=$("chatScroll"); if(!s) return;
+  const d=document.createElement("div"); d.className="msg-row";
+  const esc = text.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+  d.innerHTML = `<div class="msg user">${esc}</div>`;
+  s.appendChild(d); asstScroll();
+}
+
+/* hızlı öneri çipleri */
+function asstShowChips(){
+  const s=$("chatScroll"); if(!s) return;
+  const samples = (LANG==="en")
+    ? ["exhaust temp high","fan not spinning","no water flow","high pressure","communication","20.48"]
+    : ["egzoz sıcaklığı yüksek","fan dönmüyor","su akışı yok","yüksek basınç","iletişim hatası","20.48"];
+  const d=document.createElement("div");
+  d.innerHTML = `<div class="chips-label">${t("asst_chips_label")}</div>
+    <div class="chips">${samples.map(x=>`<span class="chip" onclick="asstChip(this)">${x}</span>`).join("")}</div>`;
+  s.appendChild(d); asstScroll();
+}
+function asstChip(el){ $("asstInput").value = el.textContent; sendAssistantMsg(); }
+
+/* arıza kartı */
+function asstCardHtml(rec){
+  return `<div class="asst-card" onclick="asstOpen('${rec.group}','${rec.code}')">
+    <span class="ac-code">${rec.code}</span>
+    <span class="ac-meta"><span class="ac-nm">${asstLocalName(rec)}</span>
+      <span class="ac-sub">${asstLocalShort(rec)}</span>
+      <span class="ac-grp">${rec.groupName}</span></span>
+    <span class="ac-go">${t("asst_open")}</span>
+  </div>`;
+}
+/* kart adını/short'unu aktif dile çevir (EN varsa) */
+function asstLocalName(rec){
+  if(LANG==="en"){
+    const m=(rec.group==="varmup"?(typeof FAULTS_EN!=="undefined"?FAULTS_EN:{}):(typeof SILENT_FAULTS_EN!=="undefined"?SILENT_FAULTS_EN:{}))[rec.code];
+    if(m&&m.name) return m.name;
+  }
+  return rec.name;
+}
+function asstLocalShort(rec){
+  if(LANG==="en"){
+    const m=(rec.group==="varmup"?(typeof FAULTS_EN!=="undefined"?FAULTS_EN:{}):(typeof SILENT_FAULTS_EN!=="undefined"?SILENT_FAULTS_EN:{}))[rec.code];
+    if(m&&m.short) return m.short;
+  }
+  return rec.short;
+}
+
+function asstOpen(groupId, code){ reopenFromHistory(groupId, code); }
+function asstOpenEr20(){
+  activeGroup = GROUPS[0]; activeFaults = GROUPS[0].faults;
+  openEr20();
+}
+
+function sendAssistantMsg(){
+  const inp = $("asstInput"); if(!inp) return;
+  const raw = (inp.value||"").trim();
+  if(!raw) return;
+  asstUserMsg(raw);
+  inp.value="";
+
+  // 1) Er20 alt kodu?
+  if(asstDetectEr20(raw)){
+    asstBotMsg(t("asst_er20"));
+    const s=$("chatScroll");
+    const d=document.createElement("div");
+    d.innerHTML = `<div class="asst-special" onclick="asstOpenEr20()">${t("asst_er20_btn")}</div>`;
+    s.appendChild(d); asstScroll();
+    return;
+  }
+
+  // 2) Doğrudan kod?
+  const code = asstDetectCode(raw);
+  let results = [];
+  if(code){
+    const idx = buildAssistantIndex();
+    const hit = idx.filter(r=>r.code===code);
+    if(hit.length){
+      asstBotMsg(hit.length===1 ? t("asst_found_one") : t("asst_found_many"));
+      const s=$("chatScroll");
+      hit.forEach(r=>{ const d=document.createElement("div"); d.innerHTML=asstCardHtml(r); s.appendChild(d); });
+      asstScroll();
+      return;
+    }
+  }
+
+  // 3) Belirti araması
+  results = asstSearch(raw);
+  if(results.length){
+    asstBotMsg(results.length===1 ? t("asst_found_one") : t("asst_found_many"));
+    const s=$("chatScroll");
+    results.forEach(r=>{ const d=document.createElement("div"); d.innerHTML=asstCardHtml(r); s.appendChild(d); });
+    asstScroll();
+  } else {
+    asstBotMsg(t("asst_none"));
+    const s=$("chatScroll");
+    const d=document.createElement("div");
+    d.innerHTML = `<span class="asst-link" onclick="openGroups()">${t("asst_browse")} ›</span>`;
+    s.appendChild(d); asstScroll();
+  }
+}
+
+function clearAssistant(){
+  asstStarted = false;
+  $("chatScroll").innerHTML = "";
+  openAssistant();
 }
 
 /* ===== Er20 ALT KOD ÇÖZÜCÜ ===== */
