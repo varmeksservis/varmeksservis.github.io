@@ -367,6 +367,16 @@
   .chat-input input:focus{outline:none;border-color:var(--blue)}
   .chat-input button{background:linear-gradient(135deg,var(--blue),#3fa7ff);color:#fff;border:none;border-radius:12px;padding:0 18px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;white-space:nowrap}
   .chat-clear{font-size:12px;color:var(--txt-dim);text-align:center;cursor:pointer;padding:6px;margin-top:2px}
+  /* asistan: seçili ürün rozeti */
+  .asst-badge{display:flex;align-items:center;gap:8px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-radius:11px;padding:9px 12px;margin-bottom:12px}
+  .asst-badge .ab-label{font-size:12px;color:var(--txt-dim)}
+  .asst-badge .ab-name{font-weight:800;font-size:13.5px;color:var(--txt)}
+  .asst-badge .ab-change{margin-left:auto;background:transparent;border:1px solid var(--line);color:var(--blue);border-radius:8px;padding:6px 11px;font-family:inherit;font-size:11.5px;font-weight:700;cursor:pointer}
+  .asst-badge .ab-change:active{background:var(--surface-2)}
+  /* asistan: ürün seçim düğmeleri */
+  .asst-prod-btns{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px}
+  .asst-prod-btn{flex:1;min-width:130px;background:var(--surface-2);border:1px solid var(--line);color:var(--txt);border-radius:12px;padding:14px 16px;font-family:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:border-color .2s,background .2s}
+  .asst-prod-btn:active{border-color:var(--blue);background:var(--surface)}
 </style>
 </head>
 <body>
@@ -497,6 +507,7 @@
       <div class="kick" data-i18n="asst_kick">Servis · Asistan</div>
       <h2 data-i18n="asst_h2">Teknik Asistan</h2>
     </div>
+    <div class="asst-badge" id="asstBadge" style="display:none"></div>
     <div class="chat-scroll" id="chatScroll"></div>
     <div class="chat-input">
       <input id="asstInput" type="text" data-i18n-ph="asst_ph" placeholder="Belirti veya hata kodu yazın…" autocomplete="off"
@@ -516,7 +527,7 @@
    sürüm değişince eski önbellek otomatik silinir ve güncelleme
    bildirimi tetiklenir.
    ============================================================ */
-const APP_VERSION = "1.5.1";
+const APP_VERSION = "1.6.0";
 const APP_DATE = "2026-06";
 
 /* ============================================================
@@ -713,8 +724,15 @@ const I18N = {
                     en:"Describe the symptom, we'll point you to the right fix" },
   asst_kick:      { tr:"Servis · Asistan",           en:"Service · Assistant" },
   asst_h2:        { tr:"Teknik Asistan",             en:"Technical Assistant" },
-  asst_intro:     { tr:"Merhaba! Cihazın belirtisini ya da hata kodunu yazın — örneğin \"egzoz sıcaklığı yüksek\", \"fan dönmüyor\", \"su akışı yok\" veya \"20.48\". Sizi doğru arıza çözümüne yönlendireyim.",
-                    en:"Hi! Type the device symptom or fault code — e.g. \"exhaust temperature high\", \"fan not spinning\", \"no water flow\" or \"20.48\". I'll point you to the right fix." },
+  asst_intro:     { tr:"Merhaba! Size doğru yönlendirebilmem için önce hangi ürünün başında olduğunuzu seçin.",
+                    en:"Hi! To guide you correctly, first pick which product you're working on." },
+  asst_ask_product:{ tr:"Hangi ürün için yardım istiyorsunuz?", en:"Which product do you need help with?" },
+  asst_after_product:{ tr:"Tamam — <b>{p}</b> için yardımcı olayım. Şimdi cihazın belirtisini ya da hata kodunu yazın. Örneğin: \"egzoz sıcaklığı yüksek\", \"fan dönmüyor\", \"gaz var ama düşük basınç hatası\" veya \"20.48\".",
+                    en:"Got it — let's work on <b>{p}</b>. Now type the device symptom or fault code. e.g. \"exhaust temperature high\", \"fan not spinning\", \"gas present but low pressure fault\" or \"20.48\"." },
+  asst_need_product:{ tr:"Önce ürünü seçelim — yukarıdan Varm Up veya Varm Silent'a dokunun.",
+                    en:"Let's pick the product first — tap Varm Up or Varm Silent above." },
+  asst_change_product:{ tr:"Ürünü değiştir", en:"Change product" },
+  asst_badge_label:{ tr:"Seçili ürün:", en:"Selected product:" },
   asst_ph:        { tr:"Belirti veya hata kodu yazın…", en:"Type a symptom or fault code…" },
   asst_send:      { tr:"Gönder",                      en:"Send" },
   asst_chips_label:{ tr:"Sık kullanılanlar:",        en:"Common ones:" },
@@ -1604,7 +1622,7 @@ function asstWordScore(qw, rec){
 
 /* Belirti araması: yazım hatasına toleranslı, kelime bazlı puanlama */
 function asstSearch(raw){
-  const idx = buildAssistantIndex();
+  const idx = buildAssistantIndex().filter(r=> !asstProduct || r.group===asstProduct);
   const q = asstNorm(raw);
   if(!q) return [];
   const words = q.split(" ").filter(w=>w.length>=2);
@@ -1625,16 +1643,59 @@ function asstSearch(raw){
 
 /* ---- sohbet arayüzü ---- */
 let asstStarted = false;
+let asstProduct = null;   // "varmup" | "varmsilent" — asistana kilitli ürün
 
 function openAssistant(){
   showView("assistantPage");
   if(!asstStarted){
     asstStarted = true;
+    asstProduct = null;
     $("chatScroll").innerHTML = "";
+    renderAsstBadge();
     asstBotMsg(t("asst_intro"));
-    asstShowChips();
+    asstAskProduct();
   }
   setTimeout(()=>{ const i=$("asstInput"); if(i) i.focus(); }, 200);
+}
+
+/* seçili ürün rozeti (sayfa başında) */
+function renderAsstBadge(){
+  const host = $("asstBadge");
+  if(!host) return;
+  if(!asstProduct){ host.innerHTML=""; host.style.display="none"; return; }
+  const g = GROUPS.find(x=>x.id===asstProduct);
+  host.style.display="flex";
+  host.innerHTML = `<span class="ab-label">${t("asst_badge_label")}</span>
+    <span class="ab-name">${g?g.name:""}</span>
+    <button class="ab-change" onclick="asstChangeProduct()">${t("asst_change_product")} ✎</button>`;
+}
+
+/* ürün seçim sorusu + iki düğme */
+function asstAskProduct(){
+  asstBotMsg(t("asst_ask_product"));
+  const s=$("chatScroll"); if(!s) return;
+  const d=document.createElement("div");
+  d.innerHTML = `<div class="asst-prod-btns">` +
+    GROUPS.filter(g=>g.active!==false).map(g=>
+      `<button class="asst-prod-btn" onclick="asstPickProduct('${g.id}')">${g.name}</button>`
+    ).join("") + `</div>`;
+  s.appendChild(d); asstScroll();
+}
+
+function asstPickProduct(groupId){
+  asstProduct = groupId;
+  const g = GROUPS.find(x=>x.id===groupId);
+  renderAsstBadge();
+  asstUserMsg(g?g.name:groupId);
+  asstBotMsg(t("asst_after_product").replace("{p}", g?g.name:groupId));
+  asstShowChips();
+  setTimeout(()=>{ const i=$("asstInput"); if(i) i.focus(); }, 150);
+}
+
+function asstChangeProduct(){
+  asstProduct = null;
+  renderAsstBadge();
+  asstAskProduct();
 }
 
 function asstScroll(){ const s=$("chatScroll"); if(s) s.scrollTop = s.scrollHeight; }
@@ -1694,7 +1755,9 @@ function asstLocalShort(rec){
 
 function asstOpen(groupId, code){ reopenFromHistory(groupId, code); }
 function asstOpenEr20(){
-  activeGroup = GROUPS[0]; activeFaults = GROUPS[0].faults;
+  const gid = asstProduct || "varmup";
+  const g = GROUPS.find(x=>x.id===gid) || GROUPS[0];
+  activeGroup = g; activeFaults = g.faults;
   openEr20();
 }
 
@@ -1704,6 +1767,13 @@ function sendAssistantMsg(){
   if(!raw) return;
   asstUserMsg(raw);
   inp.value="";
+
+  // Ürün seçilmediyse önce onu iste
+  if(!asstProduct){
+    asstBotMsg(t("asst_need_product"));
+    asstAskProduct();
+    return;
+  }
 
   // 1) Er20 alt kodu?
   if(asstDetectEr20(raw)){
@@ -1715,11 +1785,10 @@ function sendAssistantMsg(){
     return;
   }
 
-  // 2) Doğrudan kod?
+  // 2) Doğrudan kod? (yalnızca seçili ürün içinde)
   const code = asstDetectCode(raw);
-  let results = [];
   if(code){
-    const idx = buildAssistantIndex();
+    const idx = buildAssistantIndex().filter(r=> r.group===asstProduct);
     const hit = idx.filter(r=>r.code===code);
     if(hit.length){
       asstBotMsg(hit.length===1 ? t("asst_found_one") : t("asst_found_many"));
@@ -1730,8 +1799,8 @@ function sendAssistantMsg(){
     }
   }
 
-  // 3) Belirti araması
-  results = asstSearch(raw);
+  // 3) Belirti araması (ürün filtreli)
+  const results = asstSearch(raw);
   if(results.length){
     asstBotMsg(results.length===1 ? t("asst_found_one") : t("asst_found_many"));
     const s=$("chatScroll");
